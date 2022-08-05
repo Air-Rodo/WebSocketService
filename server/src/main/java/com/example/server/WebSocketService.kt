@@ -90,7 +90,7 @@ class WebSocketService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        mWebSocketServer = ServerSocket("192.168.4.105", 8080, mWebSocketCallback)
+        mWebSocketServer = ServerSocket("192.168.2.8", 8080, mWebSocketCallback)
         mWebSocketServer?.start()
     }
 
