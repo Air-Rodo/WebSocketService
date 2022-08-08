@@ -37,6 +37,7 @@ class WebSocketServerService : Service() {
             msg.what = 0
             msg.obj = message
             ServerActivity.mHandler.sendMessage(msg)
+            onMessageListener?.loadMessage(message)
         }
 
         override fun onMessage(bytes: ByteBuffer?) {
@@ -129,6 +130,16 @@ class WebSocketServerService : Service() {
     fun sendMessage(message: String) {
         Log.d(TAG, "sendMessage: $message")
         mWebSocketServer?.send(message)
+    }
+
+    private var onMessageListener: OnMessageListener? = null
+
+    interface OnMessageListener {
+        fun loadMessage(message: String?)
+    }
+
+    fun setOnMessageListener(onMessageListener: OnMessageListener){
+        this.onMessageListener = onMessageListener
     }
 
     override fun onDestroy() {

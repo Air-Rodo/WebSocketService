@@ -76,6 +76,11 @@ class ServerActivity : AppCompatActivity() {
             Log.d(TAG, "onServiceConnected: ")
             val binder = service as WebSocketServerService.WebSocketServerBinder
             mWebSocketServerService = binder.getService()
+            mWebSocketServerService?.setOnMessageListener(object : WebSocketServerService.OnMessageListener {
+                override fun loadMessage(message: String?) {
+                    binding.tvMessage.text = message
+                }
+            })
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
