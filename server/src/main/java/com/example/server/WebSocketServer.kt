@@ -13,7 +13,7 @@ import java.nio.ByteBuffer
  * Created on 2022/8/4 10:28
  * Email:
  */
-class ServerSocket(hostName: String, port: Int, callback: Callback) : WebSocketServer(InetSocketAddress(hostName, port)) {
+class WebSocketServer(hostName: String, port: Int, callback: Callback) : WebSocketServer(InetSocketAddress(hostName, port)) {
 
     private var callback: Callback? = callback
 
@@ -27,13 +27,13 @@ class ServerSocket(hostName: String, port: Int, callback: Callback) : WebSocketS
         Log.d(TAG, "onOpen: conn = $conn")
         mSocketClients[conn] = conn?.remoteSocketAddress?.address?.hostAddress
         callback?.onOpen(handshake)
-        callback?.updateSocketClient(mSocketClients)
+        callback?.addSocketClient(mSocketClients)
     }
 
     override fun onClose(conn: WebSocket?, code: Int, reason: String?, remote: Boolean) {
         Log.d(TAG, "onClose: conn = $conn")
         mSocketClients.remove(conn)
-        callback?.updateSocketClient(mSocketClients)
+        callback?.removeSocketClient(conn)
     }
 
     override fun onMessage(conn: WebSocket?, message: String?) {
@@ -52,7 +52,7 @@ class ServerSocket(hostName: String, port: Int, callback: Callback) : WebSocketS
     }
 
     override fun onStart() {
-        Log.d(TAG, "onStart: ")
+        Log.d(TAG, "onStart: 启动WebSocket服务...")
     }
 
     fun send(SocketClient: List<String?>, message: String?) {
@@ -72,6 +72,8 @@ class ServerSocket(hostName: String, port: Int, callback: Callback) : WebSocketS
 
         fun onMessage(bytes: ByteBuffer?)
 
-        fun updateSocketClient(socketHashMap: HashMap<WebSocket?, String?>?)
+        fun addSocketClient(socketHashMap: HashMap<WebSocket?, String?>?)
+
+        fun removeSocketClient(conn: WebSocket?)
     }
 }

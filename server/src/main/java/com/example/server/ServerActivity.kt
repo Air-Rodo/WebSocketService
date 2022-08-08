@@ -1,16 +1,17 @@
 package com.example.server
 
+import android.content.ComponentName
 import android.content.Intent
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.Message
+import android.content.ServiceConnection
+import android.os.*
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.example.server.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity() {
+class ServerActivity : AppCompatActivity() {
+
+    private var mWebSocketServerService: WebSocketServerService? = null
 
     companion object {
         private const val TAG = "TAG"
@@ -19,18 +20,18 @@ class MainActivity : AppCompatActivity() {
                 super.handleMessage(msg)
                 when (msg.what) {
                     0 -> {
-                        Log.d(TAG, "handleMessage: 0 = ${msg.obj}")
+                        Log.d(TAG, "ClientMessage: = ${msg.obj}")
                     }
                     1 -> {
                         val stringBuffer = StringBuffer()
-                        if (WebSocketService.mClientIpList.size < 1) {
+                        if (WebSocketServerService.mClientIpList.size < 1) {
                             stringBuffer.append("当前无设备连接\n")
                         } else {
-                            for (ip in WebSocketService.mClientIpList) {
+                            for (ip in WebSocketServerService.mClientIpList) {
                                 stringBuffer.append("$ip:已连接\n")
                             }
                         }
-                        Log.d(TAG, "handleMessage: 1 = $stringBuffer")
+                        Log.d(TAG, "Client is Connect = $stringBuffer")
                     }
                 }
             }
@@ -41,24 +42,48 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        initService()
         initListener()
+    }
+
+    private fun initService() {
+        bindService(Intent(this@ServerActivity, WebSocketServerService::class.java), mServiceConnection, BIND_AUTO_CREATE)
     }
 
     private fun initListener() {
         binding.btnStartServer.setOnClickListener {
-            startService(Intent(this@MainActivity, WebSocketService::class.java))
+            mWebSocketServerService?.start()
         }
 
         binding.btnStopServer.setOnClickListener {
-            stopService(Intent(this@MainActivity, WebSocketService::class.java))
+            mWebSocketServerService?.stop()
         }
 
         binding.btnSendMsg.setOnClickListener {
             val message = Message()
             message.what = 1
             message.obj = binding.etText.text.toString()
-            WebSocketService.mService.sendMessage(message)
+            WebSocketServerService.mService.sendMessage(message)
             binding.etText.setText("")
         }
+    }
+
+    private val mServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            Log.d(TAG, "onServiceConnected: ")
+            val binder = service as WebSocketServerService.WebSocketServerBinder
+            mWebSocketServerService = binder.getService()
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            Log.d(TAG, "onServiceDisconnected: ")
+            mWebSocketServerService = null
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unbindService(mServiceConnection)
+        Log.d(TAG, "onDestroy: ")
     }
 }

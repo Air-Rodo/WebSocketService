@@ -24,18 +24,13 @@ class WebSocketClientService : Service() {
         private const val TAG = "TAG"
     }
 
-    private var mWebSocketClient: JWebSocketClient? = null
-
-    override fun onCreate() {
-        super.onCreate()
-        initSocketClient()
-    }
+    private var mWebSocketClient: WebSocketClient? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return START_STICKY
     }
 
-    private val mClientCallback = object : JWebSocketClient.Callback {
+    private val mClientCallback = object : WebSocketClient.Callback {
         override fun onOpen(serverHandshake: ServerHandshake?) {
 
         }
@@ -44,19 +39,20 @@ class WebSocketClientService : Service() {
             val msg = Message.obtain()
             msg.what = 0
             msg.obj = message
-            MainActivity.mHandler.sendMessage(msg)
+            ClientActivity.mHandler.sendMessage(msg)
+            listener?.loadMessage(message)
         }
 
         override fun onMessage(bytes: ByteBuffer?) {
             val msg = Message.obtain()
             msg.what = 0
             msg.obj = getString(bytes)
-            MainActivity.mHandler.sendMessage(msg)
+            ClientActivity.mHandler.sendMessage(msg)
         }
     }
 
-    private fun initSocketClient() {
-        mWebSocketClient = JWebSocketClient(URI.create("ws://192.168.1.147:9999"), mClientCallback)
+    fun connect() {
+        mWebSocketClient = WebSocketClient(URI.create("ws://192.168.2.8:8080"), mClientCallback)
         try {
             mWebSocketClient?.connectBlocking(3, TimeUnit.SECONDS)
         } catch (e: Exception) {
@@ -64,14 +60,14 @@ class WebSocketClientService : Service() {
         }
     }
 
-    inner class JWebSocketClientBinder : Binder() {
+    inner class WebSocketClientBinder : Binder() {
         fun getService(): WebSocketClientService {
             return this@WebSocketClientService
         }
     }
 
     override fun onBind(intent: Intent?): IBinder {
-        return JWebSocketClientBinder()
+        return WebSocketClientBinder()
     }
 
     fun sendMessage(message: String) {
@@ -81,7 +77,7 @@ class WebSocketClientService : Service() {
         }
     }
 
-    private fun closeConnect() {
+    fun disconnect() {
         try {
             if (mWebSocketClient != null) {
                 mWebSocketClient?.closeBlocking()
@@ -95,7 +91,7 @@ class WebSocketClientService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        closeConnect()
+        Log.d(TAG, "onDestroy: ")
     }
 
     /**

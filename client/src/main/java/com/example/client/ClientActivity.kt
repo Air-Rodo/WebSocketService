@@ -9,7 +9,7 @@ import android.util.Log
 import androidx.databinding.DataBindingUtil
 import com.example.client.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity() {
+class ClientActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "TAG"
         val mHandler = object : Handler(Looper.getMainLooper()) {
@@ -17,8 +17,7 @@ class MainActivity : AppCompatActivity() {
                 super.handleMessage(msg)
                 when (msg.what) {
                     0 -> {
-                        Log.d(TAG, "handleMessage: msg = ${msg.obj}")
-
+                        Log.d(TAG, "Server Message: = ${msg.obj}")
                     }
                 }
             }
@@ -30,11 +29,16 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        initService()
+        initListener()
+    }
+
+    private fun initListener() {
         binding.btnBind.setOnClickListener {
-            bindService(Intent(this@MainActivity, WebSocketClientService::class.java), mServiceConnection, BIND_AUTO_CREATE)
+            mService?.connect()
         }
         binding.btnUnBind.setOnClickListener {
-            unbindService(mServiceConnection)
+            mService?.disconnect()
         }
 
         binding.btnSendMsg.setOnClickListener {
@@ -45,10 +49,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun initService() {
+        bindService(Intent(this@ClientActivity, WebSocketClientService::class.java), mServiceConnection, BIND_AUTO_CREATE)
+    }
+
     private val mServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             Log.d(TAG, "onServiceConnected: ")
-            val binder = service as WebSocketClientService.JWebSocketClientBinder
+            val binder = service as WebSocketClientService.WebSocketClientBinder
             mService = binder.getService()
             mService?.setOnMessageListener(object : WebSocketClientService.OnMessageListener {
                 override fun loadMessage(message: String?) {
@@ -62,5 +70,10 @@ class MainActivity : AppCompatActivity() {
         override fun onServiceDisconnected(name: ComponentName?) {
             Log.d(TAG, "onServiceDisconnected: ")
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unbindService(mServiceConnection)
     }
 }

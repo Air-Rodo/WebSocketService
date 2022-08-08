@@ -15,7 +15,7 @@
         android:theme="@style/Theme.WebSocketService"
         tools:targetApi="31">
         <activity
-            android:name="com.example.server.MainActivity"
+            android:name="com.example.server.ServerActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,7 +23,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name="com.example.server.WebSocketService" />
+        <service android:name="com.example.server.WebSocketServerService" />
     </application>
 
 </manifest>

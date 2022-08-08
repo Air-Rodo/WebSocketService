@@ -12,7 +12,7 @@ import java.nio.ByteBuffer
  * Created on 2022/8/4 14:52
  * Email:
  */
-open class JWebSocketClient(uri: URI, callback: Callback) : WebSocketClient(uri) {
+open class WebSocketClient(uri: URI, callback: Callback) : WebSocketClient(uri) {
 
     private var mClientCallback: Callback? = callback
 
