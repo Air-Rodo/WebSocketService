@@ -19,21 +19,11 @@ import java.nio.charset.CharsetDecoder
  */
 class WebSocketServerService : Service() {
 
+    private var mWebSocketServer: WebSocketServer? = null
+
     companion object {
         private const val TAG = "TAG"
         val mClientIpList = mutableListOf<String?>()
-        val mService = object : Handler(Looper.getMainLooper()) {
-            override fun handleMessage(msg: Message) {
-                super.handleMessage(msg)
-                when (msg.what) {
-                    1 -> {
-                        val message = msg.obj as String
-                        mWebSocketServer?.send(mClientIpList.toList(), message)
-                    }
-                }
-            }
-        }
-        var mWebSocketServer: WebSocketServer? = null
     }
 
 
@@ -57,17 +47,28 @@ class WebSocketServerService : Service() {
         }
 
         override fun addSocketClient(socketHashMap: HashMap<WebSocket?, String?>?) {
+            mClientIpList.clear()
             val values = socketHashMap?.values
             if (values != null) {
                 mClientIpList.addAll(values)
             }
-            ServerActivity.mHandler.sendEmptyMessage(1)
+//            ServerActivity.mHandler.sendEmptyMessage(1)
+        }
+
+        override fun clientConnect(conn: WebSocket?) {
+            val msg = Message()
+            msg.what = 2
+            msg.obj = conn?.remoteSocketAddress?.address?.hostName
+            ServerActivity.mHandler.sendMessage(msg)
         }
 
         override fun removeSocketClient(conn: WebSocket?) {
             val ip = conn?.remoteSocketAddress?.address?.hostAddress
             mClientIpList.remove(ip)
-            ServerActivity.mHandler.sendEmptyMessage(1)
+            val msg = Message()
+            msg.what = 3
+            msg.obj = ip
+            ServerActivity.mHandler.sendMessage(msg)
         }
     }
 
@@ -85,7 +86,6 @@ class WebSocketServerService : Service() {
         return try {
             charset = Charset.forName("UTF-8")
             decoder = charset.newDecoder()
-//             charBuffer = decoder.decode(buffer);//用这个的话，只能输出来一次结果，第二次显示为空
             charBuffer = decoder.decode(buffer.asReadOnlyBuffer())
             charBuffer.toString()
         } catch (ex: Exception) {
@@ -124,6 +124,11 @@ class WebSocketServerService : Service() {
         }
         mWebSocketServer = null
         Log.d(TAG, "stop: 停止WebSocketServer")
+    }
+
+    fun sendMessage(message: String) {
+        Log.d(TAG, "sendMessage: $message")
+        mWebSocketServer?.send(message)
     }
 
     override fun onDestroy() {

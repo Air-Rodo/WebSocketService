@@ -33,6 +33,12 @@ class ServerActivity : AppCompatActivity() {
                         }
                         Log.d(TAG, "Client is Connect = $stringBuffer")
                     }
+                    2 -> {
+                        Log.d(TAG, "${msg.obj} is Connect")
+                    }
+                    3 -> {
+                        Log.d(TAG, "${msg.obj} is Disconnect")
+                    }
                 }
             }
         }
@@ -60,10 +66,7 @@ class ServerActivity : AppCompatActivity() {
         }
 
         binding.btnSendMsg.setOnClickListener {
-            val message = Message()
-            message.what = 1
-            message.obj = binding.etText.text.toString()
-            WebSocketServerService.mService.sendMessage(message)
+            mWebSocketServerService?.sendMessage(binding.etText.text.toString())
             binding.etText.setText("")
         }
     }

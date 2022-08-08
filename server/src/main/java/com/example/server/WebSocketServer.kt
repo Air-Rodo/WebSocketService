@@ -24,14 +24,15 @@ class WebSocketServer(hostName: String, port: Int, callback: Callback) : WebSock
     }
 
     override fun onOpen(conn: WebSocket?, handshake: ClientHandshake?) {
-        Log.d(TAG, "onOpen: conn = $conn")
+        Log.d(TAG, "onOpen: ${conn?.remoteSocketAddress?.address?.hostName}")
         mSocketClients[conn] = conn?.remoteSocketAddress?.address?.hostAddress
         callback?.onOpen(handshake)
+        callback?.clientConnect(conn)
         callback?.addSocketClient(mSocketClients)
     }
 
     override fun onClose(conn: WebSocket?, code: Int, reason: String?, remote: Boolean) {
-        Log.d(TAG, "onClose: conn = $conn")
+        Log.d(TAG, "onClose: ${conn?.remoteSocketAddress?.address?.hostName}")
         mSocketClients.remove(conn)
         callback?.removeSocketClient(conn)
     }
@@ -48,20 +49,16 @@ class WebSocketServer(hostName: String, port: Int, callback: Callback) : WebSock
     }
 
     override fun onError(conn: WebSocket?, ex: Exception?) {
-        Log.d(TAG, "onError: conn = $conn ,error = ${ex?.message}")
+        Log.d(TAG, "onError: conn = ${conn?.remoteSocketAddress?.address?.hostName} ,error = ${ex?.message}")
     }
 
     override fun onStart() {
         Log.d(TAG, "onStart: 启动WebSocket服务...")
     }
 
-    fun send(SocketClient: List<String?>, message: String?) {
-        for (ipAddress in SocketClient) {
-            for (key in mSocketClients.entries) {
-                if (key.value == ipAddress) {
-                    key.key?.send(message)
-                }
-            }
+    fun send(message: String?) {
+        for (key in mSocketClients.entries) {
+            key.key?.send(message)
         }
     }
 
@@ -73,6 +70,8 @@ class WebSocketServer(hostName: String, port: Int, callback: Callback) : WebSock
         fun onMessage(bytes: ByteBuffer?)
 
         fun addSocketClient(socketHashMap: HashMap<WebSocket?, String?>?)
+
+        fun clientConnect(conn: WebSocket?)
 
         fun removeSocketClient(conn: WebSocket?)
     }

@@ -52,11 +52,13 @@ class WebSocketClientService : Service() {
     }
 
     fun connect() {
-        mWebSocketClient = WebSocketClient(URI.create("ws://192.168.2.8:8080"), mClientCallback)
-        try {
-            mWebSocketClient?.connectBlocking(3, TimeUnit.SECONDS)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        if (mWebSocketClient == null) {
+            mWebSocketClient = WebSocketClient(URI.create("ws://192.168.2.8:8080"), mClientCallback)
+            try {
+                mWebSocketClient?.connectBlocking(3, TimeUnit.SECONDS)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -80,7 +82,7 @@ class WebSocketClientService : Service() {
     fun disconnect() {
         try {
             if (mWebSocketClient != null) {
-                mWebSocketClient?.closeBlocking()
+                mWebSocketClient?.close()
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -91,6 +93,7 @@ class WebSocketClientService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        mWebSocketClient = null
         Log.d(TAG, "onDestroy: ")
     }
 
